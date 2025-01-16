@@ -1,0 +1,25 @@
+export default function CreateWallet() {
+  return (
+    <>
+      <div className="p-10">
+
+        <div className="pt-20 text-center flex flex-col">
+          <div>
+            <p className="text-justify justify-center text-[#FEC84B] bg-[#FEC84B]/20  border border-[#f5c453] m-auto full p-5 mb-5">
+              Once you generate the seed phrase, save it securely and once you
+              have saved it, you can preoceed to wallet.
+            </p>
+          </div>
+          <div>
+            <button className="bg-slate-800 text-white px-4 py-2 rounded font-bold w-full">
+              Generate seed phrase
+            </button>
+          </div>
+          <div className="border border-slate-500 rounded w-full h-40 m-auto mt-5">
+
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
