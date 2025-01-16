@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export default function CreateWallet() {
   return (
     <>
@@ -18,6 +20,9 @@ export default function CreateWallet() {
           <div className="border border-slate-500 rounded w-full h-40 m-auto mt-5">
 
           </div>
+          <Link href="/view-balance" className="text-slate-800 border border-slate-800 bg-white px-4 py-2 rounded font-bold w-full mt-10">
+          Continue to Wallet
+          </Link>
         </div>
       </div>
     </>
