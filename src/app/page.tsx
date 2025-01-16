@@ -1,7 +1,25 @@
-export default function Home() {
+import Link from "next/link";
+
+function Home() {
   return (
-    <div className="">
-      <h1>Hello world</h1>
-    </div>
+    <>
+      <div className="p-10">
+        {/* <Navbar /> */}
+        <div className="text-center pt-20 ">
+          <h1 className="text-gray-800 font-bold text-3xl">Wallet</h1>
+          <p className="pt-10">Welcome to your Web3 Wallet made just for you.</p>
+          <div className="pt-20 flex flex-col gap-8">
+            <div>
+              <Link href="/create-wallet" className=" bg-[#FEC84B]  text-white px-4 py-2 rounded font-bold">Create a Wallet</Link>
+            </div>
+            <div>
+            <Link href="/" className="bg-slate-800 text-white px-4 py-2 rounded font-bold">Sign in with seed phrase</Link>
+            </div>
+          </div>
+        </div>
+      </div>
+    </>
   );
 }
+
+export default Home;
