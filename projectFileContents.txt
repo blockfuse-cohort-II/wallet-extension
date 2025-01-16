@@ -1,0 +1,459 @@
+File: /Users/mac/Documents/Projects/blockfuse/cohort-two/wallet-extension/.env
+
+# Ethereum Provider (Infura API Key)
+INFURA_PROJECT_ID=your_infura_project_id
+INFURA_PROJECT_SECRET=a860f02b149a4615a1e1ad7c2b4708c8
+# Default Ethereum Network
+ETHEREUM_NETWORK=mainnet
+
+# Next.js Secrets (if required)
+NEXT_PUBLIC_API_BASE_URL=http://localhost:3000
+
+
+---
+
+File: /Users/mac/Documents/Projects/blockfuse/cohort-two/wallet-extension/.eslintrc.json
+
+{
+  "extends": ["next/core-web-vitals", "next/typescript"]
+}
+
+
+---
+
+File: /Users/mac/Documents/Projects/blockfuse/cohort-two/wallet-extension/package.json
+
+{
+  "name": "wallet-extension",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "file": "node fileLister.js"
+  },
+  "dependencies": {
+    "bip39": "^3.1.0",
+    "ethers": "^6.13.5",
+    "fs-extra": "^11.3.0",
+    "next": "14.2.13",
+    "react": "^18",
+    "react-dom": "^18",
+    "web3": "^4.16.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "eslint": "^8",
+    "eslint-config-next": "14.2.13",
+    "postcss": "^8",
+    "tailwindcss": "^3.4.1",
+    "typescript": "^5"
+  }
+}
+
+
+---
+
+File: /Users/mac/Documents/Projects/blockfuse/cohort-two/wallet-extension/src/app/api/addNetwork/route.ts
+
+import { NextResponse } from 'next/server';
+import { addCustomNetwork } from '../../../utils/network';
+
+export async function POST(req: Request) {
+  const body = await req.json();
+  const { name, rpcUrl, chainId } = body;
+
+  if (!name || !rpcUrl || !chainId) {
+    return NextResponse.json({ error: 'All fields are required.' }, { status: 400 });
+  }
+
+  try {
+    addCustomNetwork(name, rpcUrl, chainId);
+    return NextResponse.json({ message: 'Network added successfully.' }, { status: 200 });
+  } catch (error) {
+    return NextResponse.json({ error: 'Failed to add network.' }, { status: 500 });
+  }
+}
+
+
+---
+
+File: /Users/mac/Documents/Projects/blockfuse/cohort-two/wallet-extension/src/app/api/createWallet/route.ts
+
+import { NextResponse } from 'next/server';
+import { ethers } from 'ethers';
+
+export async function POST(req: Request) {
+  const body = await req.json();
+  const { mnemonic } = body;
+
+  if (!mnemonic) {
+    return NextResponse.json({ error: 'Mnemonic is required.' }, { status: 400 });
+  }
+
+  try {
+    // Create a wallet from the mnemonic
+    const wallet = ethers.Wallet.fromPhrase(mnemonic);
+
+    return NextResponse.json(
+      {
+        address: wallet.address,
+        privateKey: wallet.privateKey,
+      },
+      { status: 200 }
+    );
+  } catch (error) {
+    return NextResponse.json({ error: 'Error creating wallet.' }, { status: 500 });
+  }
+}
+
+
+---
+
+File: /Users/mac/Documents/Projects/blockfuse/cohort-two/wallet-extension/src/app/api/generateMnemonic/route.ts
+
+import { NextResponse } from 'next/server';
+import { generateMnemonic, validateMnemonic } from 'bip39';
+
+export async function POST() {
+  // Generate a 12-word mnemonic
+  const mnemonic = generateMnemonic(128); // 128 bits = 12 words
+
+  // Validate the generated mnemonic
+  const isValid = validateMnemonic(mnemonic);
+  const money = "money"
+  console.log(money)
+
+  if (!isValid) {
+    return NextResponse.json({ error: 'Invalid mnemonic generated.' }, { status: 400 });
+  }
+
+  return NextResponse.json({ mnemonic }, { status: 200 });
+}
+
+
+---
+
+File: /Users/mac/Documents/Projects/blockfuse/cohort-two/wallet-extension/src/app/api/getWalletDetails/route.ts
+
+import { NextResponse } from 'next/server';
+import { ethers } from 'ethers';
+
+export async function POST(req: Request) {
+  const { address } = await req.json();
+
+  if (!address) {
+    return NextResponse.json({ error: 'Wallet address is required.' }, { status: 400 });
+  }
+
+  try {
+    // Connect to the Ethereum blockchain (use a public provider like Infura or Alchemy)
+    const provider = new ethers.InfuraProvider('homestead', 'a860f02b149a4615a1e1ad7c2b4708c8');
+
+    // Fetch the balance of the wallet
+    const balance = await provider.getBalance(address);
+    
+    // Convert the balance from wei to ether
+    const balanceInEther = ethers.formatEther(balance);
+
+    return NextResponse.json({
+      address,
+      balance: balanceInEther,
+    });
+  } catch (error) {
+    return NextResponse.json({ error: 'Failed to fetch wallet details.' }, { status: 500 });
+  }
+}
+
+
+
+// import { NextResponse } from 'next/server';
+// import Web3 from 'web3';
+
+// export async function POST(req: Request) {
+//   const { address } = await req.json();
+
+//   if (!address) {
+//     return NextResponse.json({ error: 'Wallet address is required.' }, { status: 400 });
+//   }
+
+//   try {
+//     // Connect to the Ethereum blockchain (using Infura as the provider)
+//     const web3 = new Web3('https://mainnet.infura.io/v3/a860f02b149a4615a1e1ad7c2b4708c8');
+
+//     // Fetch the balance of the wallet
+//     const balanceWei = await web3.eth.getBalance(address);
+
+//     // Convert the balance from wei to ether
+//     const balanceInEther = web3.utils.fromWei(balanceWei, 'ether');
+
+//     return NextResponse.json({
+//       address,
+//       balance: balanceInEther,
+//     });
+//   } catch (error) {
+//     return NextResponse.json({ error: 'Failed to fetch wallet details.' }, { status: 500 });
+//   }
+// }
+
+
+---
+
+File: /Users/mac/Documents/Projects/blockfuse/cohort-two/wallet-extension/src/app/api/switchNetwork/route.ts
+
+import { NextResponse } from 'next/server';
+import { ethers } from 'ethers';
+import { getNetwork } from '../../../utils/network';
+
+export async function POST(req: Request) {
+  const body = await req.json();
+  const { networkName } = body;
+
+  if (!networkName) {
+    return NextResponse.json({ error: 'Network name is required.' }, { status: 400 });
+  }
+
+  const networkConfig = getNetwork(networkName);
+
+  if (!networkConfig) {
+    return NextResponse.json({ error: 'Network not found.' }, { status: 404 });
+  }
+
+  try {
+    const provider = new ethers.JsonRpcProvider(networkConfig.rpcUrl);
+    const network = await provider.getNetwork();
+
+    return NextResponse.json({
+      network: network.name,
+      chainId: network.chainId,
+      rpcUrl: networkConfig.rpcUrl,
+    });
+  } catch (error) {
+    return NextResponse.json({ error: 'Failed to switch network.' }, { status: 500 });
+  }
+}
+
+
+---
+
+File: /Users/mac/Documents/Projects/blockfuse/cohort-two/wallet-extension/src/app/layout.tsx
+
+import type { Metadata } from "next";
+import "./globals.css";
+
+
+export const metadata: Metadata = {
+  title: "Create Next App",
+  description: "Generated by create next app",
+};
+
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
+  return (
+    <html lang="en">
+      <body
+        
+      >
+        {children}
+      </body>
+    </html>
+  );
+}
+
+
+---
+
+File: /Users/mac/Documents/Projects/blockfuse/cohort-two/wallet-extension/src/app/page.tsx
+
+export default function Home() {
+  return (
+    <div className="">
+      <h1>Hello world</h1>
+    </div>
+  );
+}
+
+
+---
+
+File: /Users/mac/Documents/Projects/blockfuse/cohort-two/wallet-extension/src/app/wallet-test/page.tsx
+
+import GenerateMnemonicForm from "../../components/GenerateMnemonicForm";
+
+export default function WalletPage() {
+  return (
+    <div>
+      <h1>Wallet Generator</h1>
+      <GenerateMnemonicForm />
+    </div>
+  );
+}
+
+
+---
+
+File: /Users/mac/Documents/Projects/blockfuse/cohort-two/wallet-extension/src/components/GenerateMnemonicForm.tsx
+
+'use client';
+
+import { useState } from 'react';
+
+export default function GenerateMnemonicForm() {
+  const [mnemonic, setMnemonic] = useState<string>('');
+  const [wallet, setWallet] = useState<{ address: string; privateKey: string } | null>(null);
+
+  const generateMnemonic = async () => {
+    const response = await fetch('/api/generateMnemonic', { method: 'POST' });
+    const data = await response.json();
+    if (data.mnemonic) setMnemonic(data.mnemonic);
+  };
+
+  const createWallet = async () => {
+    const response = await fetch('/api/createWallet', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ mnemonic }),
+    });
+    const data = await response.json();
+    if (data.address) setWallet(data);
+  };
+
+  return (
+    <div>
+      <button onClick={generateMnemonic}>Generate Mnemonic</button>
+      {mnemonic && (
+        <div>
+          <p>Mnemonic: {mnemonic}</p>
+          <button onClick={createWallet}>Create Wallet</button>
+        </div>
+      )}
+      {wallet && (
+        <div>
+          <p>Address: {wallet.address}</p>
+          <p>Private Key: {wallet.privateKey}</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+
+---
+
+File: /Users/mac/Documents/Projects/blockfuse/cohort-two/wallet-extension/src/utils/bip.ts
+
+import { generateMnemonic, validateMnemonic } from 'bip39';
+
+export function createMnemonic(): string {
+  const mnemonic = generateMnemonic(128); // 12 words
+  if (!validateMnemonic(mnemonic)) {
+    throw new Error('Invalid mnemonic generated.');
+  }
+  return mnemonic;
+}
+
+
+---
+
+File: /Users/mac/Documents/Projects/blockfuse/cohort-two/wallet-extension/src/utils/network.ts
+
+export interface NetworkConfig {
+    name: string;
+    rpcUrl: string;
+    chainId: number;
+  }
+  
+  const defaultNetworks: Record<string, NetworkConfig> = {
+    mainnet: {
+      name: 'Ethereum Mainnet',
+      rpcUrl: 'https://mainnet.infura.io/v3/YOUR_INFURA_PROJECT_ID',
+      chainId: 1,
+    },
+    polygon: {
+      name: 'Polygon Mainnet',
+      rpcUrl: 'https://polygon-rpc.com',
+      chainId: 137,
+    },
+    bsc: {
+      name: 'Binance Smart Chain',
+      rpcUrl: 'https://bsc-dataseed.binance.org',
+      chainId: 56,
+    },
+  };
+  
+  export const networks = { ...defaultNetworks };
+  
+  export function addCustomNetwork(name: string, rpcUrl: string, chainId: number) {
+    networks[name] = { name, rpcUrl, chainId };
+  }
+  
+  export function getNetwork(name: string): NetworkConfig | undefined {
+    return networks[name];
+  }
+  
+
+---
+
+File: /Users/mac/Documents/Projects/blockfuse/cohort-two/wallet-extension/tailwind.config.ts
+
+import type { Config } from "tailwindcss";
+
+const config: Config = {
+  content: [
+    "./src/pages/**/*.{js,ts,jsx,tsx,mdx}",
+    "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
+    "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
+  ],
+  theme: {
+    extend: {
+      colors: {
+        background: "var(--background)",
+        foreground: "var(--foreground)",
+      },
+    },
+  },
+  plugins: [],
+};
+export default config;
+
+
+---
+
+File: /Users/mac/Documents/Projects/blockfuse/cohort-two/wallet-extension/tsconfig.json
+
+{
+  "compilerOptions": {
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "preserve",
+    "incremental": true,
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  },
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+  "exclude": ["node_modules"]
+}
+
+
+---
