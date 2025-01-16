@@ -9,8 +9,14 @@ export async function POST(req: Request) {
   }
 
   try {
+
     // Connect to the Ethereum blockchain (use a public provider like Infura or Alchemy)
-    const provider = new ethers.InfuraProvider('homestead', 'a860f02b149a4615a1e1ad7c2b4708c8');
+    const provider = new ethers.InfuraProvider(
+        process.env.ETHEREUM_NETWORK || 'homestead',
+        process.env.INFURA_PROJECT_ID
+      );
+
+
 
     // Fetch the balance of the wallet
     const balance = await provider.getBalance(address);
